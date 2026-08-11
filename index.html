@@ -1,0 +1,372 @@
+[11.08.2026 19:49] Shtorina: <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pivas</title>
+    <style>
+        :root {
+            --beer-amber: #f4a261;        /* Классический янтарный цвет пива */
+            --beer-gold: #e76f51;         /* Темно-янтарный */
+            --foam-white: #ffffff;        /* Белая пенка */
+            --foam-cream: #fff8e7;        /* Кремовая пенка для бабблов */
+            --bg-glass: #f7ede2;          /* Светлый фон */
+            --bubble-color: rgba(255, 255, 255, 0.4);
+            --text-main: #3d2314;          /* Темно-коричневый текст */
+            --sidebar-width: 200px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-glass);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Боковая панель каналов */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--foam-white);
+            border-right: 2px solid #f0e6d2;
+            display: flex;
+            flex-direction: column;
+            padding: 15px 10px;
+            gap: 8px;
+            z-index: 15;
+            box-shadow: 2px 0 10px rgba(61, 35, 20, 0.05);
+        }
+
+        .sidebar h3 {
+            font-size: 12px;
+            color: var(--beer-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+
+        .room-btn {
+            background: var(--foam-cream);
+            color: var(--text-main);
+            border: 1px solid #f0e6d2;
+            padding: 10px 14px;
+            text-align: left;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .room-btn:hover {
+            background: #fceade;
+        }
+
+        .room-btn.active {
+            background: var(--beer-amber);
+            color: #ffffff;
+            border-color: var(--beer-amber);
+            box-shadow: 0 2px 6px rgba(244, 162, 97, 0.3);
+        }
+
+        /* Главный контейнер чата */
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Шапка с эффектом пивной пенки */
+        header {
+            background: linear-gradient(180deg, var(--foam-white) 65%, var(--beer-amber) 100%);
+            color: var(--text-main);
+            padding: 18px 20px 14px;
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(244, 162, 97, 0.3);
+            border-bottom: 3px solid var(--beer-gold);
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Зона сообщений */
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 85px;
+            background-image: radial-gradient(var(--bubble-color) 15%, transparent 16%);
+            background-size: 24px 24px;
+        }
+
+        .message {
+            max-width: 78%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(61, 35, 20, 0.08);
+            position: relative;
+        }
+
+        /* Мои сообщения (янтарно-пивные) */
+        .message.my {
+            align-self: flex-end;
+            background-color: var(--beer-amber);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.other {
+            align-self: flex-start;
+            background-color: var(--foam-white);
+            color: var(--text-main);
+            border-bottom-left-radius: 4px;
+            border: 1px solid #f0e6d2;
+        }
+
+        .message-user {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--beer-gold);
+            margin-bottom: 4px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.75;
+            float: right;
+            margin-left: 10px;
+            margin-top: 4px;
+        }
+
+        /* Панель ввода */
+        #form {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: var(--foam-white);
+            padding: 12px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.06);
+            border-top: 2px solid #f0e6d2;
+        }
+
+        #input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid var(--beer-amber);
+            border-radius: 25px;
+            outline: none;
+            font-size: 15px;
+            background: var(--foam-cream);
+            color: var(--text-main);
+        }
+
+        #input:focus {
+            background: #ffffff;
+            border-color: var(--beer-gold);
+        }
+
+        /* Кнопка отправки */
+        #form button {
+            background-color: var(--beer-amber);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(244, 162, 97, 0.4);
+            transition: transform 0.1s, background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        #form button:active {
+            transform: scale(0.92);
+            background-color: var(--beer-gold);
+        }
+
+        #form button svg {
+            width: 22px;
+            height: 22px;
+            fill: #ffffff;
+        }
+
+        /* Экран входа */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, var(--foam-white) 35%, var(--beer-amber) 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100;
+            padding: 30px;
+        }
+
+        .login-card {
+            background: var(--foam-white);
+            padding: 35px 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(61, 35, 20, 0.15);
+            display: flex; flex-direction: column; align-items: center; gap: 18px;
+            width: 100%; max-width: 320px;
+            border: 2px solid var(--beer-amber);
+        }
+
+        .login-card h1 {
+            color: var(--text-main);
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        #username-input {
+            padding: 14px 20px; 
+            border-radius: 25px; 
+            border: 2px solid var(--beer-amber); 
+            width: 100%;
+            font-size: 16px; 
+            text-align: center; 
+            outline: none;
+            background: var(--foam-cream);
+            color: var(--text-main);
+        }
+
+        #start-btn {
+            padding: 14px 32px; 
+            border-radius: 25px; 
+            border: 2px solid var(--beer-amber); 
+            background: var(--foam-white); 
+            color: var(--text-main);
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        #start-btn:active {
+            background: var(--beer-amber);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+[11.08.2026 19:49] Shtorina: <!-- Экран входа -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>Pivas</h1>
+            <p style="color: #7a6252; font-size: 14px;">Введите имя</p>
+            <input type="text" id="username-input" placeholder="" maxlength="15">
+            <button id="start-btn">Начать</button>
+        </div>
+    </div>
+
+    <!-- Боковое меню каналов -->
+    <div class="sidebar">
+        <h3>Каналы</h3>
+        <button class="room-btn active" onclick="switchRoom('общий', this)"># общий</button>
+        <button class="room-btn" onclick="switchRoom('меме', this)"># меме</button>
+    </div>
+
+    <!-- Основная зона чата -->
+    <div class="main-chat">
+        <header id="current-room-header">Pivas — #общий</header>
+
+        <div id="messages"></div>
+
+        <form id="form">
+            <input id="input" autocomplete="off" placeholder="Сообщение" />
+            <button type="submit">
+                <svg viewBox="0 0 24 24">
+                    <path d="M2 20h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H2c-.55 0-1 .45-1 1v9c0 .55.45 1 1 1zm20-8c0-.55-.45-1-1-1h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 4 7.58 10.59C7.22 10.95 7 11.45 7 12v7c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let userName = '';
+        let currentRoom = 'общий';
+        const socket = io();
+
+        const loginScreen = document.getElementById('login-screen');
+        const usernameInput = document.getElementById('username-input');
+        const startBtn = document.getElementById('start-btn');
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+        const roomHeader = document.getElementById('current-room-header');
+
+        startBtn.addEventListener('click', () => {
+            userName = usernameInput.value.trim();
+            if (userName) {
+                loginScreen.style.display = 'none';
+                input.focus();
+            }
+        });
+
+        // Функция переключения комнат
+        function switchRoom(room, btn) {
+            if (currentRoom === room) return;
+
+            currentRoom = room;
+            roomHeader.innerText = 'Pivas — #' + room;
+            messages.innerHTML = ''; // Очищаем историю при переходе в новый канал
+
+            document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            socket.emit('join room', room);
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value.trim()) {
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+                socket.emit('chat message', { 
+                    text: input.value, 
+                    user: userName,
+                    room: currentRoom,
+                    time: timeStr
+                });
+                input.value = '';
+            }
+        });
+
+        // Прием сообщений от сервера
+        socket.on('chat message', (msg) => {
+            const item = document.createElement('div');
+            item.classList.add('message');
+            const isMy = msg.user === userName;
+            
+            item.classList.add(isMy ? 'my' : 'other');
+
+            let userHTML = isMy ? '' : '<div class="message-user">' + msg.user + '</div>';
+            let timeHTML = '<div class="message-time">' + (msg.time || '') + '</div>';
+
+            item.innerHTML = userHTML + '<div>' + msg.text + '</div>' + timeHTML;
+
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight;
+        });
+    </script>
+</body>
+</html>
