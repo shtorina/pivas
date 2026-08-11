@@ -1,34 +1,38 @@
 const express = require('express');
-const path = require('path');
 const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const path = require('path');
 
-app.use(express.json());
 app.use(express.static(__dirname));
-
-// Временное хранилище сообщений
-let messagesHistory = [];
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Получить все сообщения
-app.get('/api/messages', (req, res) => {
-    res.json(messagesHistory);
+io.on('connection', (socket) => {
+    // По умолчанию сажаем пользователя в комнату "general"
+    socket.join('general');
+
+    // Переключение между комнатами
+    socket.on('join room', (room) => {
+        // Выходим из всех предыдущих комнат, кроме личного ID
+        for (const r of socket.rooms) {
+            if (r !== socket.id) socket.leave(r);
+        }
+        socket.join(room);
+    });
+
+    // Получение и рассылка сообщения конкретной комнате
+    socket.on('chat message', (msg) => {
+        // Отправляем только людям в той же комнате
+        io.to(msg.room).emit('chat message', msg);
+    });
 });
 
-// Отправить новое сообщение
-app.post('/api/messages', (req, res) => {
-    const { name, text } = req.body;
-    if (text) {
-        const msg = { name: name || 'Аноним', text, time: new Date().toLocaleTimeString() };
-        messagesHistory.push(msg);
-        if (messagesHistory.length > 50) messagesHistory.shift(); // храним 50 последних
-        res.json({ success: true, message: msg });
-    } else {
-        res.status(400).json({ error: 'Пустое сообщение' });
-    }
+const PORT = 3000;
+http.listen(PORT, () => {
+    console.log('=================================');
+    console.log('>>> Pivas Server Online [Port 3000] <<<');
+    console.log('=================================');
 });
-
-// ВАЖНО: Экспорт для Vercel вместо http.listen!
-module.exports = app;
